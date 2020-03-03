@@ -1,0 +1,6 @@
+FROM {{parent}}
+
+ENV TEST test
+COPY shared ${CONF_HOME}
+
+RUN echo "{{spark_version}}" > ${CONF_HOME}/version.txt

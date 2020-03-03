@@ -1,0 +1,9 @@
+FROM {{parent}}
+
+ENV TEST test
+
+ENV TEST2 test2
+
+COPY child2/start-gpu.sh ${CONF_HOME}/start-gpu.sh
+
+RUN echo "{{cuda_version}}" > ${CONF_HOME}/cuda.version
