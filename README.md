@@ -108,10 +108,10 @@ the image hierarchy
 ## Building and running
 To build the binary, run the following command from the project root:
 ```
-go build -i -o cake
+go build -i -o cake ./cmd/cake/main.go
 ```
 
-It will produce a binary compiled for the current OS/platform. Use `build.sh` to build for both linux/amd64 and darwin/amd64.
+It will produce a binary compiled for the current OS/platform. Use `build.sh` to build for linux/amd64, darwin/amd64, and windows.
 
 To get a list of available options run:
 ```

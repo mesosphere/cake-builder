@@ -1,4 +1,4 @@
-package main
+package cake
 
 import (
 	"context"
@@ -53,7 +53,7 @@ func TestImageExists(t *testing.T) {
 		ReleaseTag: testTag,
 	}
 
-	exists, err := imageExists(client, &image, config)
+	exists, err := ImageExists(client, &image, config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -63,7 +63,7 @@ func TestImageExists(t *testing.T) {
 	}
 
 	config.ReleaseTag = "nonexistent"
-	exists, err = imageExists(client, &image, config)
+	exists, err = ImageExists(client, &image, config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -112,7 +112,7 @@ func TestImageBuild(t *testing.T) {
 	sort.Strings(expectedTags)
 
 	dockerClient := new(MockDockerClient)
-	err = buildImage(dockerClient, &image, buildConfig)
+	err = BuildImage(dockerClient, &image, buildConfig)
 	if err != nil {
 		t.Error(err)
 	}
@@ -185,7 +185,7 @@ func TestPushImage(t *testing.T) {
 	sort.Strings(expectedTags)
 
 	dockerClient := new(MockDockerClient)
-	err = pushImage(dockerClient, &image, buildConfig)
+	err = PushImage(dockerClient, &image, buildConfig)
 	if err != nil {
 		t.Error(err)
 	}

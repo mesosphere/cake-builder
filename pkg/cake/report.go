@@ -1,4 +1,4 @@
-package main
+package cake
 
 import (
 	"encoding/json"
@@ -16,10 +16,10 @@ type ImageBuildSummary struct {
 	PublishedTags []string
 }
 
-func generateReport(image *Image, config BuildConfig) error {
+func GenerateReport(image *Image, config BuildConfig) error {
 	var summaries []ImageBuildSummary
 
-	walkBuildGraph(image, func(image *Image) {
+	WalkBuildGraph(image, func(image *Image) {
 		summary := ImageBuildSummary{
 			Id:            image.ImageConfig.Id,
 			StableTag:     fmt.Sprintf("%s:%s", image.getFullName(), image.getStableTag(config)),

@@ -1,4 +1,4 @@
-package main
+package cake
 
 import (
 	"fmt"
@@ -149,7 +149,7 @@ func TestTransformConfigToImages(t *testing.T) {
 		},
 	}
 
-	images, err := transformConfigToImages(buildConfig)
+	images, err := TransformConfigToImages(buildConfig)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -190,7 +190,7 @@ func TestMultipleBaseImagesDetection(t *testing.T) {
 		},
 	}
 
-	images, err := transformConfigToImages(buildConfig)
+	images, err := TransformConfigToImages(buildConfig)
 	if err == nil {
 		t.Errorf("Expected error but received images: %s", images)
 	}
@@ -223,7 +223,7 @@ func TestMissingImageIdDetection(t *testing.T) {
 		},
 	}
 
-	images, err := transformConfigToImages(buildConfig)
+	images, err := TransformConfigToImages(buildConfig)
 	if err == nil {
 		t.Errorf("Expected error but received images: %s", images)
 	}
@@ -254,7 +254,7 @@ func TestCreateBuildGraph(t *testing.T) {
 		"child-02": {ImageConfig: ImageConfig{Id: "child-02", Parent: "child-0"}},
 	}
 
-	parent, err := createImageBuildGraph(sourceImages)
+	parent, err := CreateImageBuildGraph(sourceImages)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -293,7 +293,7 @@ func TestImageIdNotFound(t *testing.T) {
 		"child-0": {ImageConfig: ImageConfig{Id: "child-0", Parent: "unknown"}},
 	}
 
-	root, err := createImageBuildGraph(sourceImages)
+	root, err := CreateImageBuildGraph(sourceImages)
 	if err == nil {
 		t.Errorf("Expected error but received %s", root)
 	}
@@ -311,7 +311,7 @@ func TestOrphanedImageDetection(t *testing.T) {
 		"child-1": {ImageConfig: ImageConfig{Id: "child-1", Parent: "child-0"}},
 	}
 
-	root, err := createImageBuildGraph(sourceImages)
+	root, err := CreateImageBuildGraph(sourceImages)
 	if err == nil {
 		t.Errorf("Expected error but received %s", root)
 	}
@@ -328,7 +328,7 @@ func TestNoBaseImage(t *testing.T) {
 		"child-1": {ImageConfig: ImageConfig{Id: "child-1", Parent: "child-0"}},
 	}
 
-	root, err := createImageBuildGraph(sourceImages)
+	root, err := CreateImageBuildGraph(sourceImages)
 	if err == nil {
 		t.Errorf("Expected error but received %s", root)
 	}
@@ -350,14 +350,14 @@ func TestWalkBuildGraph(t *testing.T) {
 
 	expected := []string{"root", "child-1", "child-0", "child-11", "child-10"}
 
-	root, err := createImageBuildGraph(sourceImages)
+	root, err := CreateImageBuildGraph(sourceImages)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
 
 	var visited []string
 
-	walkBuildGraph(root, func(image *Image) {
+	WalkBuildGraph(root, func(image *Image) {
 		visited = append(visited, image.ImageConfig.Id)
 	})
 

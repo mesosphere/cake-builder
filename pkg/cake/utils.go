@@ -1,4 +1,4 @@
-package main
+package cake
 
 import (
 	"crypto/sha256"
@@ -17,7 +17,7 @@ import (
 
 const GeneratedDockerFileNamePrefix = "Dockerfile.generated"
 
-func (image *Image) renderDockerfileFromTemplate(config BuildConfig) error {
+func (image *Image) RenderDockerfileFromTemplate(config BuildConfig) error {
 	directory := filepath.Dir(image.ImageConfig.Template)
 
 	templateProperties := image.ImageConfig.Properties
@@ -51,7 +51,7 @@ func (image *Image) renderDockerfileFromTemplate(config BuildConfig) error {
 	return nil
 }
 
-func (image *Image) calculateChecksum() error {
+func (image *Image) CalculateChecksum() error {
 	directory := filepath.Dir(image.Dockerfile)
 	files, err := listFiles(directory)
 	if err != nil {
