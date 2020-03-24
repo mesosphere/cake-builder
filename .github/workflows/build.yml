@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: build
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.13
@@ -28,10 +28,15 @@ jobs:
             dep ensure
         fi
 
-    - name: goimports check
+    - name: Run goimports check
       run: |
+        export PATH=${PATH}:$(go env GOPATH)/bin
         go get golang.org/x/tools/cmd/goimports
-        [[ -z "$(goimports -d -l ./pkg/cake)" ]] || exit 1
+        output=$(goimports -d -l -e ./pkg/cake)
+        if [[ ! -z "${output}" ]]; then
+          echo "${output}"
+          exit 1
+        fi
 
     - name: Run tests
       run: go test -v ./pkg/cake
