@@ -1,4 +1,5 @@
 # Cake Docker Builder
+![go test and build](https://github.com/mesosphere/cake-builder/workflows/go%20test%20and%20build/badge.svg)
 
 Cake Docker Builder is a tool for managing builds of Docker images organized in hierarchies (layers) in order to
 optimize build times, avoid code duplication, enforce deterministic builds, and support reuse of already defined
