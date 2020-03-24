@@ -16,5 +16,5 @@ do
     fi
 
     echo "Building for ${platform}: ${output_name}"
-    GOOS=${GOOS} GOARCH=${GOARCH} go build -o $dist_dir/"${output_name}" ./cmd/cake/main.go
+    GOOS=${GOOS} GOARCH=${GOARCH} go build -o ${dist_dir}/"${output_name}" ./cmd/cake/main.go
 done

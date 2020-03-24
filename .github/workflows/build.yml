@@ -48,10 +48,12 @@ jobs:
       with:
         name: cake-darwin-amd64
         path: dist/cake-darwin-amd64
+
     - uses: actions/upload-artifact@v1
       with:
         name: cake-linux-amd64
         path: dist/cake-linux-amd64
+
     - uses: actions/upload-artifact@v1
       with:
         name: cake-windows.exe
