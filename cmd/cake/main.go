@@ -67,10 +67,11 @@ func main() {
 		}
 	})
 
-	dockerClient := cake.NewExternalDockerClient(config.AuthConfig)
-
 	if !*dryRun {
-		cake.WalkBuildGraph(buildGraph, func(image *cake.Image) {
+		dockerClient := cake.NewExternalDockerClient(config.AuthConfig)
+		defer dockerClient.Client.Close()
+
+		cake.WalkBuildGraphParallel(buildGraph, func(image *cake.Image) {
 			exists, err := cake.ImageExists(dockerClient, image, config)
 			if err != nil {
 				log.Fatal(err)
