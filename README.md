@@ -1,4 +1,5 @@
 # Cake Docker Builder
+![go test and build](https://github.com/mesosphere/cake-builder/workflows/go%20test%20and%20build/badge.svg)
 
 Cake Docker Builder is a tool for managing builds of Docker images organized in hierarchies (layers) in order to
 optimize build times, avoid code duplication, enforce deterministic builds, and support reuse of already defined
@@ -111,7 +112,14 @@ To build the binary, run the following command from the project root:
 go build -i -o cake ./cmd/cake/main.go
 ```
 
-It will produce a binary compiled for the current OS/platform. Use `build.sh` to build for linux/amd64, darwin/amd64, and windows.
+It will produce a binary compiled for the current OS/platform. 
+
+Use `build.sh` to build for linux/amd64, darwin/amd64, and windows. 
+
+```
+./build.sh
+```
+This command will create a `dist` directory with all runnable binaries for each platform.
 
 To get a list of available options run:
 ```

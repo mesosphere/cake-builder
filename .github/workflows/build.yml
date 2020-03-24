@@ -1,0 +1,60 @@
+name: go test and build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Get dependencies
+      run: |
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
+
+    - name: Run goimports check
+      run: |
+        export PATH=${PATH}:$(go env GOPATH)/bin
+        go get golang.org/x/tools/cmd/goimports
+        output=$(goimports -d -l -e ./pkg/cake)
+        if [[ ! -z "${output}" ]]; then
+          echo "${output}"
+          exit 1
+        fi
+
+    - name: Run tests
+      run: go test -v ./pkg/cake
+
+    - name: Build Go binaries
+      run: ./build.sh
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: cake-darwin-amd64
+        path: dist/cake-darwin-amd64
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: cake-linux-amd64
+        path: dist/cake-linux-amd64
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: cake-windows.exe
+        path: dist/cake-windows.exe
