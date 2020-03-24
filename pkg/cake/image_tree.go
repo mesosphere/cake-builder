@@ -1,4 +1,4 @@
-package main
+package cake
 
 import (
 	"errors"
@@ -68,7 +68,7 @@ func getTagSuffixStr(image Image) string {
 
 // Transforms list of config items into independent Tree nodes.
 // Checks for duplicate IDs and multiple parents (images with no parent defined)
-func transformConfigToImages(config BuildConfig) (images map[string]*Image, err error) {
+func TransformConfigToImages(config BuildConfig) (images map[string]*Image, err error) {
 	imageMap := make(map[string]*Image)
 	var baseImage *Image
 	for _, imageConfig := range config.Images {
@@ -94,7 +94,7 @@ func transformConfigToImages(config BuildConfig) (images map[string]*Image, err 
 }
 
 // Constructs a tree/DAG of images and performs cycle detection check and orphaned images check
-func createImageBuildGraph(images map[string]*Image) (image *Image, err error) {
+func CreateImageBuildGraph(images map[string]*Image) (image *Image, err error) {
 	// using sorted slice of image ids to maintain consistent building of the target graph
 	// which can not be achieved by iterating over the map due to random iteration order
 	var ids []string
@@ -153,7 +153,7 @@ func createImageBuildGraph(images map[string]*Image) (image *Image, err error) {
 	return root, nil
 }
 
-func walkBuildGraph(graph *Image, apply func(image *Image)) {
+func WalkBuildGraph(graph *Image, apply func(image *Image)) {
 	queue := []*Image{graph}
 	for {
 		if len(queue) == 0 {

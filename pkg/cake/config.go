@@ -1,4 +1,4 @@
-package main
+package cake
 
 import (
 	"encoding/json"
@@ -51,7 +51,7 @@ func (config BuildConfig) validate() error {
 	return nil
 }
 
-func (config *BuildConfig) loadConfigFromFile(fileName string) error {
+func (config *BuildConfig) LoadConfigFromFile(fileName string) error {
 	configFile, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return fmt.Errorf("error reading config file: %v", err)

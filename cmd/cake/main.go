@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/mesosphere/cake-builder/pkg/cake"
 )
 
 func main() {
@@ -23,8 +25,8 @@ func main() {
 	dockerPassword := flag.String("password", "", "Password to authenticate with Docker registry")
 	flag.Parse()
 
-	var config BuildConfig
-	err = config.loadConfigFromFile(currentDir + "/cake.yaml")
+	var config cake.BuildConfig
+	err = config.LoadConfigFromFile(currentDir + "/cake.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +35,7 @@ func main() {
 	config.ReleaseTag = *releaseTag
 	config.OutputFile = *outputFile
 
-	authConfig := AuthConfig{
+	authConfig := cake.AuthConfig{
 		DockerRegistryUrl: *registryUrl,
 		Username:          *dockerUser,
 		Password:          *dockerPassword,
@@ -44,49 +46,49 @@ func main() {
 	log.Println(config.Images)
 	log.Println(fmt.Sprintf("[build] dry run: %t, release tag: %s, output file: %s", *dryRun, *releaseTag, *outputFile))
 
-	images, err := transformConfigToImages(config)
+	images, err := cake.TransformConfigToImages(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	buildGraph, err := createImageBuildGraph(images)
+	buildGraph, err := cake.CreateImageBuildGraph(images)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	walkBuildGraph(buildGraph, func(image *Image) {
-		err = image.renderDockerfileFromTemplate(config)
+	cake.WalkBuildGraph(buildGraph, func(image *cake.Image) {
+		err = image.RenderDockerfileFromTemplate(config)
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = image.calculateChecksum()
+		err = image.CalculateChecksum()
 		if err != nil {
 			log.Fatal(err)
 		}
 	})
 
-	dockerClient := NewExternalDockerClient(config.AuthConfig)
+	dockerClient := cake.NewExternalDockerClient(config.AuthConfig)
 
 	if !*dryRun {
-		walkBuildGraph(buildGraph, func(image *Image) {
-			exists, err := imageExists(dockerClient, image, config)
+		cake.WalkBuildGraph(buildGraph, func(image *cake.Image) {
+			exists, err := cake.ImageExists(dockerClient, image, config)
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			if !exists {
-				err = buildImage(dockerClient, image, config)
+				err = cake.BuildImage(dockerClient, image, config)
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				err = pushImage(dockerClient, image, config)
+				err = cake.PushImage(dockerClient, image, config)
 				if err != nil {
 					log.Fatal(err)
 				}
 			}
 		})
-		err = generateReport(buildGraph, config)
+		err = cake.GenerateReport(buildGraph, config)
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -1,4 +1,4 @@
-package main
+package cake
 
 import (
 	"context"
@@ -61,7 +61,7 @@ func NewExternalDockerClient(authConfig AuthConfig) *ExternalDockerClient {
 	return &dockerClient
 }
 
-func imageExists(dockerClient DockerClient, image *Image, config BuildConfig) (bool, error) {
+func ImageExists(dockerClient DockerClient, image *Image, config BuildConfig) (bool, error) {
 
 	tags, err := dockerClient.Tags(config.AuthConfig.DockerRegistryUrl, image.getFullName())
 	if err != nil {
@@ -78,7 +78,7 @@ func imageExists(dockerClient DockerClient, image *Image, config BuildConfig) (b
 	return false, nil
 }
 
-func buildImage(dockerClient DockerClient, image *Image, config BuildConfig) error {
+func BuildImage(dockerClient DockerClient, image *Image, config BuildConfig) error {
 	imageConfig := image.ImageConfig
 
 	tmpDir := os.TempDir()
@@ -132,7 +132,7 @@ func buildImage(dockerClient DockerClient, image *Image, config BuildConfig) err
 	return nil
 }
 
-func pushImage(dockerClient DockerClient, image *Image, config BuildConfig) error {
+func PushImage(dockerClient DockerClient, image *Image, config BuildConfig) error {
 	base64Auth, err := base64Auth(config)
 	if err != nil {
 		return err

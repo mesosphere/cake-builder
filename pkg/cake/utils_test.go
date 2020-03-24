@@ -1,4 +1,4 @@
-package main
+package cake
 
 import (
 	"crypto/sha256"
@@ -57,7 +57,7 @@ RUN echo "%s" > /version.txt
 		},
 	}
 
-	err = image.renderDockerfileFromTemplate(BuildConfig{})
+	err = image.RenderDockerfileFromTemplate(BuildConfig{})
 	if err != nil {
 		t.Errorf("Unexpected error while rendering Dockerfile from template: %v", err)
 	}
@@ -109,7 +109,7 @@ ENV PROPERTY {{property}}
 		},
 	}
 
-	err = image.renderDockerfileFromTemplate(BuildConfig{})
+	err = image.RenderDockerfileFromTemplate(BuildConfig{})
 	if err == nil {
 		t.Errorf("Expected error while rendering Dockerfile from template with missing variables")
 	}
@@ -270,7 +270,7 @@ log4j.appender.console=org.apache.log4j.ConsoleAppender
 		},
 	}
 
-	err = image.calculateChecksum()
+	err = image.CalculateChecksum()
 	if err != nil {
 		t.Errorf("Unexpected error while calculating checksum: %v", err)
 	}
@@ -331,7 +331,7 @@ COMMAND echo "Hello world"
 		},
 	}
 
-	err = image.calculateChecksum()
+	err = image.CalculateChecksum()
 	if err != nil {
 		t.Errorf("Unexpected error while calculating checksum: %v", err)
 	}
