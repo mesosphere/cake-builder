@@ -1,4 +1,4 @@
-name: CI Check
+name: go test and build
 
 on:
   push:
@@ -28,6 +28,11 @@ jobs:
             dep ensure
         fi
 
+    - name: goimports check
+      run: |
+        go get golang.org/x/tools/cmd/goimports
+        [[ -z "$(goimports -d -l ./pkg/cake)" ]] || exit 1
+
     - name: Run tests
       run: go test -v ./pkg/cake
 
@@ -46,5 +51,3 @@ jobs:
       with:
         name: cake-windows.exe
         path: dist/cake-windows.exe
-
-
