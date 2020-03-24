@@ -123,7 +123,7 @@ images to an existing repo you have write access to (e.g. you can create a tempo
 DockerHub) and run:
 ```
 cd example
-../cake --username=<your GitHub username> --password="<your GitHub password>"
+../cake --username=<your DockerHub username> --password="<your DockerHub password>"
 ```
 Any modification of `Dockerfile.template` files, template properties or files listed in `extra_files` should lead to 
 a rebuild of affected images. Changes in parent should trigger rebuild of all children.
