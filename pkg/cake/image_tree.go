@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"sync"
 )
 
 // Tree Node represents Docker Image
@@ -153,14 +154,51 @@ func CreateImageBuildGraph(images map[string]*Image) (image *Image, err error) {
 	return root, nil
 }
 
+// WalkBuildGraph performs a breadth-first traversal of the tree and applies the provided function to all
+// elements from the same level in order. It is recommended using it when 'apply' function has side-effects
+// which require deterministic ordering e.g. building an ordered slice of image tags.
 func WalkBuildGraph(graph *Image, apply func(image *Image)) {
 	queue := []*Image{graph}
 	for {
 		if len(queue) == 0 {
 			break
 		}
-		image := queue[len(queue)-1]
+		image := queue[0]
+		queue[0] = nil
+		queue = queue[1:]
 		apply(image)
-		queue = append(image.Children, queue[:len(queue)-1]...)
+		queue = append(queue, image.Children...)
 	}
+}
+
+// WalkBuildGraphParallel performs a breadth-first traversal of the tree and applies the provided function
+// to all elements from the same level in parallel. The provided function should not rely on the ordering of
+// the elements within the same level. The function is called within a goroutine and while it is applied to
+// each element in order, the order of completion is not guaranteed. However, the ordering of levels is
+// always preserved and the new tree level processing doesn't start until all the elements from the previous
+// level are processed.
+func WalkBuildGraphParallel(graph *Image, apply func(image *Image)) {
+	queue := []*Image{graph}
+
+	for {
+		if len(queue) == 0 {
+			break
+		}
+		var wg sync.WaitGroup
+		wg.Add(len(queue))
+
+		var children []*Image
+		for _, image := range queue {
+			go parallelApply(image, apply, &wg)
+			children = append(children, image.Children...)
+		}
+
+		wg.Wait()
+		queue = children
+	}
+}
+
+func parallelApply(image *Image, apply func(image *Image), wg *sync.WaitGroup) {
+	defer wg.Done()
+	apply(image)
 }

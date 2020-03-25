@@ -3,6 +3,7 @@ package cake
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -346,9 +347,11 @@ func TestWalkBuildGraph(t *testing.T) {
 		"child-1":  {ImageConfig: ImageConfig{Id: "child-1", Parent: "root"}},
 		"child-10": {ImageConfig: ImageConfig{Id: "child-10", Parent: "child-1"}},
 		"child-11": {ImageConfig: ImageConfig{Id: "child-11", Parent: "child-1"}},
+		"child-00": {ImageConfig: ImageConfig{Id: "child-00", Parent: "child-0"}},
+		"child-01": {ImageConfig: ImageConfig{Id: "child-01", Parent: "child-0"}},
 	}
 
-	expected := []string{"root", "child-1", "child-0", "child-11", "child-10"}
+	expected := []string{"root", "child-0", "child-1", "child-00", "child-01", "child-10", "child-11"}
 
 	root, err := CreateImageBuildGraph(sourceImages)
 	if err != nil {
@@ -363,5 +366,62 @@ func TestWalkBuildGraph(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, visited) {
 		t.Errorf("Node order in a tree traversal differs from the expected.\nExpected:\n%s\nFound:\n%s", expected, visited)
+	}
+}
+
+func TestWalkBuildGraphParallel(t *testing.T) {
+	sourceImages := map[string]*Image{
+		"root":     {ImageConfig: ImageConfig{Id: "root"}},
+		"child-0":  {ImageConfig: ImageConfig{Id: "child-0", Parent: "root"}},
+		"child-1":  {ImageConfig: ImageConfig{Id: "child-1", Parent: "root"}},
+		"child-10": {ImageConfig: ImageConfig{Id: "child-10", Parent: "child-1"}},
+		"child-11": {ImageConfig: ImageConfig{Id: "child-11", Parent: "child-1"}},
+		"child-00": {ImageConfig: ImageConfig{Id: "child-00", Parent: "child-0"}},
+		"child-01": {ImageConfig: ImageConfig{Id: "child-01", Parent: "child-0"}},
+	}
+
+	root, err := CreateImageBuildGraph(sourceImages)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	channel := make(chan string, len(sourceImages))
+
+	WalkBuildGraphParallel(root, func(image *Image) {
+		channel <- image.ImageConfig.Id
+	})
+	close(channel)
+
+	var visited []string
+	for element := range channel {
+		visited = append(visited, element)
+	}
+
+	//due to concurrent execution we can not guarantee the ordering of elements within one level of the tree in this test.
+	//it is sufficient to verify that (1) the ordering of the levels is preserved and (2) all the expected elements are present
+	if len(visited) != len(sourceImages) {
+		t.Errorf("Number of elements after the tree traversal differs from the expected.\n"+
+			"Traversal result:\n%s", visited)
+	}
+
+	if visited[0] != "root" {
+		t.Errorf("Root element after the tree traversal differs from the expected.\nExpected: 'root'\nFound:%s\n"+
+			"Traversal result:\n%s", visited[0], visited)
+	}
+
+	secondLevelExpected := []string{"child-0", "child-1"}
+	secondLevelActual := visited[1:3]
+	sort.Strings(secondLevelActual)
+	if !reflect.DeepEqual(secondLevelExpected, secondLevelActual) {
+		t.Errorf("Second-level elements are out of order. \nExpected: %v\n"+
+			"Found: %s\nTraversal result:\n%s", secondLevelExpected, secondLevelActual, visited)
+	}
+
+	thirdLevelExpected := []string{"child-00", "child-01", "child-10", "child-11"}
+	thirdLevelActual := visited[3:]
+	sort.Strings(thirdLevelActual)
+	if !reflect.DeepEqual(thirdLevelExpected, thirdLevelActual) {
+		t.Errorf("Third-level elements are out of order. \nExpected: %s\n"+
+			"Found: %s\nTraversal result:\n%s", thirdLevelExpected, thirdLevelActual, visited)
 	}
 }

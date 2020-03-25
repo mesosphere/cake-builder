@@ -6,15 +6,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/jhoonb/archivex"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	"github.com/heroku/docker-registry-client/registry"
-	"github.com/jhoonb/archivex"
 )
 
 type DockerClient interface {
@@ -81,13 +83,17 @@ func ImageExists(dockerClient DockerClient, image *Image, config BuildConfig) (b
 func BuildImage(dockerClient DockerClient, image *Image, config BuildConfig) error {
 	imageConfig := image.ImageConfig
 
-	tmpDir := os.TempDir()
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "cake-build-")
+	if err != nil {
+		return err
+	}
+
 	buildContextTarName := fmt.Sprintf("%s/%s_%s_context.tar", tmpDir, imageConfig.Repository, imageConfig.Name)
 
 	tar := new(archivex.TarFile)
 	defer tar.Close()
 
-	err := tar.Create(buildContextTarName)
+	err = tar.Create(buildContextTarName)
 	if err != nil {
 		return err
 	}
