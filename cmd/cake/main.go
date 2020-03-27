@@ -34,14 +34,11 @@ func main() {
 	config.BaseDir = currentDir
 	config.ReleaseTag = *releaseTag
 	config.OutputFile = *outputFile
-
-	authConfig := cake.AuthConfig{
+	config.AuthConfig = cake.AuthConfig{
 		DockerRegistryUrl: *registryUrl,
 		Username:          *dockerUser,
 		Password:          *dockerPassword,
 	}
-
-	config.AuthConfig = authConfig
 
 	log.Println(config.Images)
 	log.Println(fmt.Sprintf("[build] dry run: %t, release tag: %s, output file: %s", *dryRun, *releaseTag, *outputFile))

@@ -20,11 +20,18 @@ const GeneratedDockerFileNamePrefix = "Dockerfile.generated"
 func (image *Image) RenderDockerfileFromTemplate(config BuildConfig) error {
 	directory := filepath.Dir(image.ImageConfig.Template)
 
-	templateProperties := image.ImageConfig.Properties
+	templateProperties := config.GlobalProperties
 
-	if len(templateProperties) == 0 {
-		log.Printf("No properties provided for templating")
+	if templateProperties == nil {
 		templateProperties = make(map[string]string)
+	}
+
+	if len(image.ImageConfig.Properties) == 0 && len(templateProperties) == 0 {
+		log.Printf("No properties provided for templating")
+	} else {
+		for key, value := range image.ImageConfig.Properties {
+			templateProperties[key] = value
+		}
 	}
 
 	if image.Parent != nil {

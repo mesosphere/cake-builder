@@ -27,11 +27,11 @@ ENV PROPERTY %s
 RUN echo "%s" > /version.txt
 `, expectedParent, expectedEnvVar, expectedVersionVar)
 
-	tempDir, err := ioutil.TempDir("", "test")
+	tmpDir, err := ioutil.TempDir("", "test")
 	if err != nil {
 		t.Errorf("Failed to create temporary directory: %v", err)
 	}
-	tmpFile, err := os.Create(path.Join(tempDir, "Dockerfile.template"))
+	tmpFile, err := os.Create(path.Join(tmpDir, "Dockerfile.template"))
 	if err != nil {
 		t.Errorf("Failed to create file: %v", err)
 	}
@@ -61,7 +61,83 @@ RUN echo "%s" > /version.txt
 	if err != nil {
 		t.Errorf("Unexpected error while rendering Dockerfile from template: %v", err)
 	}
-	dockerfile := path.Join(tempDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagSuffix)
+	dockerfile := path.Join(tmpDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagSuffix)
+
+	_, err = os.Stat(dockerfile)
+	if os.IsNotExist(err) {
+		t.Error("Rendered Dockerfile not found")
+	}
+
+	bytes, err := ioutil.ReadFile(dockerfile)
+	if err != nil {
+		t.Errorf("Failed to read bytes from file %s: %v", dockerfile, err)
+	}
+	contents := string(bytes)
+
+	if strings.Compare(expectedDockerfile, contents) != 0 {
+		t.Errorf("Rendered Dockerfile contents differ from the expected.\nExpected:\n%s\nRendered:\n%s", expectedDockerfile, contents)
+	}
+}
+
+func TestGlobalTemplateProperties(t *testing.T) {
+	expectedGlobalProperty := "global_property"
+	expectedLocalProperty := "local_property"
+	expectedGlobalPropertyOverride := "global_property_override"
+	expectedParent := "foo/bar:baz"
+
+	template := `FROM {{parent}}
+ENV GLOBAL_PROPERTY {{global_tmpl_property}}
+ENV LOCAL_PROPERTY {{local_tmpl_property}}
+ENV GLOBAL_PROPERTY_OVERRIDE {{tmpl_property_override}}
+`
+	expectedDockerfile := fmt.Sprintf(`FROM %s
+ENV GLOBAL_PROPERTY %s
+ENV LOCAL_PROPERTY %s
+ENV GLOBAL_PROPERTY_OVERRIDE %s
+`, expectedParent, expectedGlobalProperty, expectedLocalProperty, expectedGlobalPropertyOverride)
+
+	tmpDir, err := ioutil.TempDir("", "test")
+	if err != nil {
+		t.Errorf("Failed to create temporary directory: %v", err)
+	}
+	tmpFile, err := os.Create(path.Join(tmpDir, "Dockerfile.template"))
+	if err != nil {
+		t.Errorf("Failed to create file: %v", err)
+	}
+	_, err = tmpFile.Write([]byte(template))
+	if err != nil {
+		t.Errorf("Failed to write file: %v", err)
+	}
+
+	buildConfig := BuildConfig{
+		GlobalProperties: map[string]string{
+			"global_tmpl_property":   expectedGlobalProperty,
+			"tmpl_property_override": "DEFAULT",
+		},
+	}
+
+	image := Image{
+		Parent: &Image{
+			ImageConfig: ImageConfig{
+				Repository: "foo",
+				Name:       "bar",
+			},
+			Checksum: "baz",
+		},
+		ImageConfig: ImageConfig{
+			Template: tmpFile.Name(),
+			Properties: map[string]string{
+				"local_tmpl_property":    expectedLocalProperty,
+				"tmpl_property_override": expectedGlobalPropertyOverride,
+			},
+		},
+	}
+
+	err = image.RenderDockerfileFromTemplate(buildConfig)
+	if err != nil {
+		t.Errorf("Unexpected error while rendering Dockerfile from template: %v", err)
+	}
+	dockerfile := path.Join(tmpDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagSuffix)
 
 	_, err = os.Stat(dockerfile)
 	if os.IsNotExist(err) {
@@ -83,11 +159,11 @@ func TestErrorOnRenderingMissingTemplateProperties(t *testing.T) {
 	template := `FROM {{parent}}
 ENV PROPERTY {{property}}
 `
-	tempDir, err := ioutil.TempDir("", "test")
+	tmpDir, err := ioutil.TempDir("", "test")
 	if err != nil {
 		t.Errorf("Failed to create temporary directory: %v", err)
 	}
-	tmpFile, err := os.Create(path.Join(tempDir, "Dockerfile.template"))
+	tmpFile, err := os.Create(path.Join(tmpDir, "Dockerfile.template"))
 	if err != nil {
 		t.Errorf("Failed to create file: %v", err)
 	}
@@ -116,17 +192,17 @@ ENV PROPERTY {{property}}
 }
 
 func TestListFiles(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test")
+	tmpDir, err := ioutil.TempDir("", "test")
 	if err != nil {
 		t.Errorf("Failed to create temporary directory: %v", err)
 	}
 
-	tmpFileRoot, err := os.Create(path.Join(tempDir, "file1"))
+	tmpFileRoot, err := os.Create(path.Join(tmpDir, "file1"))
 	if err != nil {
 		t.Errorf("Failed to create file: %v", err)
 	}
 
-	levelOneDir := path.Join(tempDir, "nested")
+	levelOneDir := path.Join(tmpDir, "nested")
 	err = os.Mkdir(levelOneDir, os.FileMode(0777))
 	if err != nil {
 		t.Errorf("Failed to create directory %s: %v", levelOneDir, err)
@@ -136,7 +212,7 @@ func TestListFiles(t *testing.T) {
 		t.Errorf("Failed to create file: %v", err)
 	}
 
-	levelTwoDir := path.Join(tempDir, "nested2")
+	levelTwoDir := path.Join(tmpDir, "nested2")
 	err = os.Mkdir(levelTwoDir, os.FileMode(0777))
 	if err != nil {
 		t.Errorf("Failed to create directory %s: %v", levelTwoDir, err)
@@ -153,7 +229,7 @@ func TestListFiles(t *testing.T) {
 	}
 	sort.Strings(expected)
 
-	files, err := listFiles(tempDir)
+	files, err := listFiles(tmpDir)
 	if err != nil {
 		t.Errorf("Unexpected error while listing files: %v", err)
 	}
