@@ -35,11 +35,12 @@ type AuthConfig struct {
 }
 
 type BuildConfig struct {
-	AuthConfig AuthConfig
-	BaseDir    string
-	ReleaseTag string
-	OutputFile string
-	Images     []ImageConfig `yaml:"build"`
+	AuthConfig       AuthConfig
+	BaseDir          string
+	ReleaseTag       string
+	OutputFile       string
+	Images           []ImageConfig     `yaml:"images"`
+	GlobalProperties map[string]string `yaml:"global_properties"`
 }
 
 func (config BuildConfig) validate() error {

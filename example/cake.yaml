@@ -1,4 +1,9 @@
-build:
+global_properties:
+  # global property is used in all templates until there's
+  # an override in the image config
+  version: alpha
+
+images:
   - id: base-image
     repository: akirillov
     name: cake-example
@@ -26,3 +31,5 @@ build:
     template: child2/Dockerfile.template
     properties:
       cuda_version: 10.2
+      # overriding global property for this specific image
+      version: beta

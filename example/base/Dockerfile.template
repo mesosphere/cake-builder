@@ -1,5 +1,7 @@
 FROM ubuntu:{{ubuntu_version}}
 
+LABEL version="{{version}}"
+
 ENV CONF_HOME /opt/config
 ENV TEST test_2
 RUN mkdir -p ${CONF_HOME}

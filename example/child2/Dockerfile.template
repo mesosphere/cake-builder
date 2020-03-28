@@ -1,7 +1,8 @@
 FROM {{parent}}
 
-ENV TEST test
+LABEL version="{{version}}"
 
+ENV TEST test
 ENV TEST2 test2
 
 COPY child2/start-gpu.sh ${CONF_HOME}/start-gpu.sh
