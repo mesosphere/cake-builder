@@ -173,6 +173,20 @@ COPY shared/shared.sh /bin/shared.sh
 Check the [example](example) folder for a sample project layout.
 
 ### Configuration
+Cake configuration file has the following format:
+```
+# map of global properties used in all templates
+global_properties:
+  <property name>: <property value>
+
+# list of images in this build
+images:
+  - <image configration>
+  - <image configration>
+```
+Global properties are used by default in all the templates and can be overriden on a per-image basis. Properties
+defined in a specific image configuration take precedence over the global properties.
+
 The minimal image definition must contain the following properties:
 
 * `id` - a unique identifier of the image in this build
@@ -190,7 +204,10 @@ an image-specific `Dockerfile.template` is located are included by default)
 
 Example:
 ```
-build: 
+global_properties:
+  platform_version: 1.0.0
+
+images:
   - id: base-image
     repository: akirillov
     name: cake-example
@@ -208,6 +225,7 @@ build:
     extra_files:
       - shared
     properties:
+      platform_version: 1.0.1
       spark_version: 2.4.0
 ```
 
