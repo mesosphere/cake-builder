@@ -22,7 +22,7 @@ type MockDockerClient struct {
 	ImagePushTags          []string
 }
 
-func (client *MockDockerClient) Tags(repository string, imageName string) (tags []string, err error) {
+func (client *MockDockerClient) Tags(imageName string) (tags []string, err error) {
 	return client.MockTagsResponse, nil
 }
 
