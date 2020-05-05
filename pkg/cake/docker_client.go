@@ -20,7 +20,7 @@ import (
 )
 
 type DockerClient interface {
-	Tags(repository string, imageName string) (tags []string, err error)
+	Tags(imageName string) (tags []string, err error)
 	ImageBuild(ctx context.Context, buildContext io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error)
 	ImagePush(ctx context.Context, image string, options types.ImagePushOptions) (io.ReadCloser, error)
 }
@@ -29,10 +29,26 @@ type ExternalDockerClient struct {
 	AuthConfig AuthConfig
 	Client     *client.Client
 	Registry   *registry.Registry
+	TagsCache  map[string][]string
 }
 
-func (client *ExternalDockerClient) Tags(repository string, imageName string) (tags []string, err error) {
-	return client.Registry.Tags(imageName)
+// Tags retrieves tags list from the registry for specified image name and adds them to the cache.
+// It returns tags list (whether by making an HTTP call to a registry of from the cache) and any error encountered.
+func (client *ExternalDockerClient) Tags(imageName string) (tags []string, err error) {
+	// check, whether image tags are already in cache for provided image
+	tagsCached, inCache := client.TagsCache[imageName]
+	if inCache {
+		log.Printf("Tags cache hit for image '%s'", imageName)
+		return tagsCached, nil
+	}
+
+	imageTags, err := client.Registry.Tags(imageName)
+	if err == nil {
+		// add received tags to the cache
+		log.Printf("Caching received tags for '%s' image", imageName)
+		client.TagsCache[imageName] = imageTags
+	}
+	return imageTags, err
 }
 
 func (client *ExternalDockerClient) ImageBuild(ctx context.Context, buildContext io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error) {
@@ -46,6 +62,7 @@ func (client *ExternalDockerClient) ImagePush(ctx context.Context, image string,
 func NewExternalDockerClient(authConfig AuthConfig) *ExternalDockerClient {
 	dockerClient := ExternalDockerClient{
 		AuthConfig: authConfig,
+		TagsCache:  make(map[string][]string),
 	}
 
 	dockerRegistry, err := registry.New(authConfig.DockerRegistryUrl, authConfig.Username, authConfig.Password)
@@ -65,7 +82,7 @@ func NewExternalDockerClient(authConfig AuthConfig) *ExternalDockerClient {
 
 func ImageExists(dockerClient DockerClient, image *Image, config BuildConfig) (bool, error) {
 
-	tags, err := dockerClient.Tags(config.AuthConfig.DockerRegistryUrl, image.getFullName())
+	tags, err := dockerClient.Tags(image.getFullName())
 	if err != nil {
 		return false, fmt.Errorf("unable to retrieve tags for %s: %v", image.getFullName(), err)
 	}
