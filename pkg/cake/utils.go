@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/facebookgo/symwalk"
+
 	"github.com/cbroglie/mustache"
 )
 
@@ -143,8 +145,8 @@ func getContentChecksum(filePath string) (string, error) {
 
 func listFiles(directory string) ([]string, error) {
 	files := make([]string, 0)
-	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
+	err := symwalk.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() && info.Mode() != os.ModeSymlink {
 			files = append(files, path)
 		}
 		return nil

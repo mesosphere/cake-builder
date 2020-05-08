@@ -10,9 +10,14 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
+	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
+	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
+	github.com/facebookgo/symwalk v0.0.0-20150726040526-42004b9f3222
+	github.com/facebookgo/testname v0.0.0-20150612200628-5443337c3a12 // indirect
+	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/heroku/docker-registry-client v0.0.0-20190909225348-afc9e1acc3d5
 	github.com/jhoonb/archivex v0.0.0-20180718040744-0488e4ce1681
-	github.com/mholt/archiver/v3 v3.3.0
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/stretchr/testify v1.5.1
