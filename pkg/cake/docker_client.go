@@ -10,8 +10,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/jhoonb/archivex"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -107,14 +105,7 @@ func BuildImage(dockerClient DockerClient, image *Image, config BuildConfig) err
 
 	buildContextTarName := fmt.Sprintf("%s/%s_%s_context.tar", tmpDir, imageConfig.Repository, imageConfig.Name)
 
-	tar := new(archivex.TarFile)
-	defer tar.Close()
-
-	err = tar.Create(buildContextTarName)
-	if err != nil {
-		return err
-	}
-	err = tar.AddAll(config.BaseDir, false)
+	err = Tar(config.BaseDir, buildContextTarName)
 	if err != nil {
 		return err
 	}
