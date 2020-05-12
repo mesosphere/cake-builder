@@ -53,13 +53,12 @@ func Tar(source string, target string) error {
 		if err != nil {
 			return err
 		}
+		defer f.Close()
 
 		if _, err := io.Copy(writer, f); err != nil {
 			return err
 		}
 
-		f.Close()
-
-		return nil
+		return f.Close()
 	})
 }
