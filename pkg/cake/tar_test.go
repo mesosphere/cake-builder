@@ -13,17 +13,12 @@ import (
 )
 
 func TestTar(t *testing.T) {
-	//TODO:
-	// - tar with util
-	// - untar with regular tar
-	// - verify files
-
 	tmpDir, err := ioutil.TempDir("", "test")
 	if err != nil {
 		t.Errorf("Failed to create temporary directory: %v", err)
 	}
 
-	source := "testdata/tar/main"
+	source := "testdata/symlinked/main"
 	target := path.Join(tmpDir, "test.tar")
 
 	err = Tar(source, target)
@@ -54,8 +49,8 @@ func TestTar(t *testing.T) {
 	sort.Strings(files)
 
 	expected := []string{
+		tmpDir + "/Dockerfile.generated",
 		tmpDir + "/external/external.txt",
-		tmpDir + "/main.txt",
 		tmpDir + "/test.tar",
 	}
 

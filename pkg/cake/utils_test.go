@@ -356,6 +356,33 @@ log4j.appender.console=org.apache.log4j.ConsoleAppender
 	}
 }
 
+func TestChecksumWithExcludedFiles(t *testing.T) {
+	source := "testdata/symlinked"
+	dockerfile := path.Join(source, "main", "Dockerfile.generated")
+
+	content, err := ioutil.ReadFile(dockerfile)
+	if err != nil {
+		t.Errorf("Unable to read file: %v", err)
+	}
+
+	expectedChecksum := checksum(checksum(string(content)))
+	image := Image{
+		Dockerfile: dockerfile,
+		ImageConfig: ImageConfig{
+			ExcludedFiles: []string{path.Join(source, "main", "external")},
+		},
+	}
+
+	err = image.CalculateChecksum()
+	if err != nil {
+		t.Errorf("Unexpected error while calculating checksum: %v", err)
+	}
+
+	if expectedChecksum != image.Checksum {
+		t.Errorf("Calculated image checksum differs from the expected.\nExpected:\n%s\nCalculated:\n%s", expectedChecksum, image.Checksum)
+	}
+}
+
 func TestCalculateChecksumWithMultipleDockerfiles(t *testing.T) {
 	primaryDockerfileContents := `FROM ubuntu:18.04
 COMMAND echo "Hello world"

@@ -67,13 +67,25 @@ func (image *Image) CalculateChecksum() error {
 		return fmt.Errorf("error while listing files in directory: %s. %v", directory, err)
 	}
 
-	// Filtering out generated Dockerfiles not belonging to the current image.
+	// Filtering out files and folders excluded from checksums in the config.
+	// Also, filtering out generated Dockerfiles not belonging to the current image.
 	// This is required for the cases when a single Dockerfile.template is used for multiple images
 	// with different parameters. Each image defined in cake.yaml using the same Dockerfile.template
 	// will generate Dockerfile.generated[<tag suffix>] used in checksum for that specific image.
 	filteredFiles := make([]string, 0)
 	for _, file := range files {
-		if !strings.Contains(file, GeneratedDockerFileNamePrefix) || file == image.Dockerfile {
+		isGeneratedDockerfile := strings.Contains(file, GeneratedDockerFileNamePrefix)
+		isImageFile := file == image.Dockerfile
+
+		excluded := false
+		for _, s := range image.ImageConfig.ExcludedFiles {
+			if strings.HasPrefix(file, s) {
+				excluded = true
+				break
+			}
+		}
+
+		if (!isGeneratedDockerfile || isImageFile) && !excluded {
 			filteredFiles = append(filteredFiles, file)
 		}
 	}

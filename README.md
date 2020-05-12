@@ -134,7 +134,8 @@ cd example
 ../cake --username=<your DockerHub username> --password="<your DockerHub password>"
 ```
 Any modification of `Dockerfile.template` files, template properties or files listed in `extra_files` should lead to 
-a rebuild of affected images. Changes in parent should trigger rebuild of all children.
+a rebuild of affected images. Specific files and folders can be excluded from checksum calculation explicitly via
+`exclude_files` configuration parameter. Changes in parent should trigger rebuild of all children.
 
 ## Project setup
 ### Directory layout
@@ -200,6 +201,8 @@ Additional properties:
 * `parent` - ID of another image in this build which is used as a parent of an image in `FROM` statement
 * `extra_files` - list of additional files and folders to be included in checksum (files and folders from the same directory where
 an image-specific `Dockerfile.template` is located are included by default)
+* `exclude_files` - list of additional files and folders to be excluded from the checksum (this can be used for e.g. ignoring
+static resources mounted via symlinks)
 * `properties` - map of properties used for mustache templating to replace variables in `Dockerfile.template`
 
 Example:
@@ -224,6 +227,8 @@ images:
     template: child/Dockerfile.template
     extra_files:
       - shared
+    exclude_files:
+      - docs
     properties:
       platform_version: 1.0.1
       spark_version: 2.4.0

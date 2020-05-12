@@ -10,14 +10,15 @@ import (
 )
 
 type ImageConfig struct {
-	Id         string
-	Parent     string
-	Repository string
-	Name       string
-	TagSuffix  string `yaml:"tag_suffix"`
-	Template   string
-	ExtraFiles []string `yaml:"extra_files"`
-	Properties map[string]string
+	Id            string
+	Parent        string
+	Repository    string
+	Name          string
+	TagSuffix     string `yaml:"tag_suffix"`
+	Template      string
+	ExtraFiles    []string `yaml:"extra_files"`
+	ExcludedFiles []string `yaml:"exclude_files"`
+	Properties    map[string]string
 }
 
 func (image ImageConfig) String() string {
