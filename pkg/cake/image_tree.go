@@ -32,14 +32,14 @@ func (image Image) getFullName() string {
 }
 
 func (image Image) getDockerTags(config BuildConfig) []string {
-	tags := []string{fmt.Sprintf("%s:%s%s", image.getFullName(), "latest", getTagSuffixStr(image))}
+	tags := []string{fmt.Sprintf("%s:%s", image.getFullName(), getTagStr(image, "latest"))}
 
 	if len(image.Checksum) > 0 {
-		tags = append(tags, fmt.Sprintf("%s:%s%s", image.getFullName(), image.Checksum, getTagSuffixStr(image)))
+		tags = append(tags, fmt.Sprintf("%s:%s", image.getFullName(), getTagStr(image, image.Checksum)))
 	}
 
 	if len(config.ReleaseTag) > 0 && "latest" != config.ReleaseTag {
-		tags = append(tags, fmt.Sprintf("%s:%s%s", image.getFullName(), config.ReleaseTag, getTagSuffixStr(image)))
+		tags = append(tags, fmt.Sprintf("%s:%s", image.getFullName(), getTagStr(image, config.ReleaseTag)))
 	}
 
 	return tags
@@ -47,23 +47,23 @@ func (image Image) getDockerTags(config BuildConfig) []string {
 
 func (image Image) getStableTag(config BuildConfig) string {
 	if len(config.ReleaseTag) > 0 && config.ReleaseTag != "latest" {
-		return fmt.Sprintf("%s%s", config.ReleaseTag, getTagSuffixStr(image))
+		return getTagStr(image, config.ReleaseTag)
 	} else if len(image.Checksum) > 0 {
-		return fmt.Sprintf("%s%s", image.Checksum, getTagSuffixStr(image))
+		return getTagStr(image, image.Checksum)
 	} else {
-		return fmt.Sprintf("%s%s", "latest", getTagSuffixStr(image))
+		return getTagStr(image, "latest")
 	}
 }
 
 func (image Image) getChecksumTag(config BuildConfig) string {
-	return fmt.Sprintf("%s%s", image.Checksum, getTagSuffixStr(image))
+	return getTagStr(image, image.Checksum)
 }
 
-func getTagSuffixStr(image Image) string {
+func getTagStr(image Image, version string) string {
 	if len(image.ImageConfig.TagSuffix) > 0 {
-		return fmt.Sprintf("-%s", image.ImageConfig.TagSuffix)
+		return fmt.Sprintf("%s-%s", image.ImageConfig.TagSuffix, version)
 	} else {
-		return ""
+		return version
 	}
 }
 

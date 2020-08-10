@@ -1,0 +1,7 @@
+FROM ubuntu:18.04
+
+LABEL version="alpha"
+
+ENV CONF_HOME /opt/config
+ENV TEST test_2
+RUN mkdir -p ${CONF_HOME}

@@ -16,7 +16,7 @@ images:
     parent: base-image
     repository: akirillov
     name: cake-example
-    tag_suffix: child_image_tag_suffix
+    tag_prefix: child_image_tag_prefix
     template: child/Dockerfile.template
     extra_files:
       - shared
@@ -27,7 +27,7 @@ images:
     parent: child-image
     repository: akirillov
     name: cake-example
-    tag_suffix: child_of_a_child_image_tag_suffix
+    tag_prefix: child_of_a_child_image_tag_prefix
     template: child2/Dockerfile.template
     properties:
       cuda_version: 10.2

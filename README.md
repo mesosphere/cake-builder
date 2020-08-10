@@ -197,7 +197,7 @@ The minimal image definition must contain the following properties:
 
 Additional properties:
 
-* `tag_suffix` - a string appended to image tags during the build using `-` as a separator, e.g. `<image tag>-<tag_suffix>`
+* `tag_prefix` - a string prepended to image tags during the build using `-` as a separator, e.g. `<repository>/<name>:<tag_prefix>-<image tag>`
 * `parent` - ID of another image in this build which is used as a parent of an image in `FROM` statement
 * `extra_files` - list of additional files and folders to be included in checksum (files and folders from the same directory where
 an image-specific `Dockerfile.template` is located are included by default)
@@ -223,7 +223,7 @@ images:
     parent: base-image
     repository: akirillov
     name: cake-example
-    tag_suffix: child_image_tag_suffix
+    tag_prefix: child_image_tag_prefix
     template: child/Dockerfile.template
     extra_files:
       - shared
@@ -237,8 +237,8 @@ images:
 ### Image tag format and publishing
 Every image defined in `cake.yaml` results in two tags published to DockerHub which have the following format:
 ```
-<repository>/<name>:<release tag>-<tag_suffix>
-<repository>/<name>:<content checksum>-<tag_suffix>
+<repository>/<name>:<tag_prefix>-<release tag>
+<repository>/<name>:<tag_prefix>-<content checksum>
 ```
 
 **Note:** `<release tag>` in the image tag can be provided via `--release-tag` flag to `cake` CLI and defaults to `latest`.
@@ -252,8 +252,8 @@ akirillov/cake-example:latest
 akirillov/cake-example:<content checksum>
 
 # id: child-image
-akirillov/cake-example:latest-child_image_tag_suffix
-akirillov/cake-example:<content checksum>
+akirillov/cake-example:child_image_tag_prefix-latest
+akirillov/cake-example:child_image_tag_prefix-<content checksum>
 ```
 
 ## Limitations

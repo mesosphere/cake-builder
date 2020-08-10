@@ -19,7 +19,7 @@ images:
     repository: testorg
     name: test
     template: base/Dockerfile.template
-    tag_suffix: base
+    tag_prefix: base
     properties:
       base_key_1: base_value_1
       base_key_2: base_value_2
@@ -32,7 +32,7 @@ images:
     repository: testorg
     name: test
     template: child/Dockerfile.template
-    tag_suffix: child
+    tag_prefix: child
     properties:
       child_key_1: child_value_1
       child_key_2: child_value_2

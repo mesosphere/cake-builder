@@ -71,14 +71,14 @@ func TestGetStableTag(t *testing.T) {
 
 	//test release tag
 	tag := image.getStableTag(BuildConfig{ReleaseTag: releaseTag})
-	expected := fmt.Sprintf("%s-%s", releaseTag, tagSuffix)
+	expected := fmt.Sprintf("%s-%s", tagSuffix, releaseTag)
 	if expected != tag {
 		t.Errorf("Expected: %s. Found: %s", expected, tag)
 	}
 
 	//test no release tag, no checksum
 	tag = image.getStableTag(BuildConfig{})
-	expected = fmt.Sprintf("latest-%s", tagSuffix)
+	expected = fmt.Sprintf("%s-latest", tagSuffix)
 	if expected != tag {
 		t.Errorf("Expected: %s. Found: %s", expected, tag)
 	}
@@ -86,13 +86,13 @@ func TestGetStableTag(t *testing.T) {
 	//test no release tag, checksum present
 	image.Checksum = testChecksum
 	tag = image.getStableTag(BuildConfig{})
-	expected = fmt.Sprintf("%s-%s", testChecksum, tagSuffix)
+	expected = fmt.Sprintf("%s-%s", tagSuffix, testChecksum)
 	if expected != tag {
 		t.Errorf("Expected: %s. Found: %s", expected, tag)
 	}
 }
 
-func TestGetTagSuffix(t *testing.T) {
+func TestGetTagStr(t *testing.T) {
 	image := Image{
 		ImageConfig: ImageConfig{
 			TagSuffix: "",
@@ -100,17 +100,17 @@ func TestGetTagSuffix(t *testing.T) {
 	}
 
 	//test no tag suffix
-	tSuffix := getTagSuffixStr(image)
-	if tSuffix != "" {
-		t.Errorf("Expected  no tag suffix but found: %s", tSuffix)
+	tagString := getTagStr(image, "latest")
+	if tagString != "latest" {
+		t.Errorf("Expected 'latest' but found: %s", tagString)
 	}
 
 	//test with tag suffix present
 	image.ImageConfig.TagSuffix = tagSuffix
-	tSuffix = getTagSuffixStr(image)
-	expected := fmt.Sprintf("-%s", tagSuffix)
-	if tSuffix != expected {
-		t.Errorf("Expected tag suffix: '%s' but found: %s", expected, tSuffix)
+	tagString = getTagStr(image, "latest")
+	expected := fmt.Sprintf("%s-latest", tagSuffix)
+	if tagString != expected {
+		t.Errorf("Expected tag string: '%s' but found: %s", expected, tagString)
 	}
 }
 
