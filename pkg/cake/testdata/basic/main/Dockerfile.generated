@@ -1,0 +1,3 @@
+FROM ubuntu
+
+COMMAND echo "Hello world"

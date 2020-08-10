@@ -18,6 +18,7 @@ import (
 )
 
 const GeneratedDockerFileNamePrefix = "Dockerfile.generated"
+const DefaultShaLength = 64
 
 func (image *Image) RenderDockerfileFromTemplate(config BuildConfig) error {
 	directory := filepath.Dir(image.ImageConfig.Template)
@@ -60,7 +61,7 @@ func (image *Image) RenderDockerfileFromTemplate(config BuildConfig) error {
 	return nil
 }
 
-func (image *Image) CalculateChecksum() error {
+func (image *Image) CalculateChecksum(checksumLength int) error {
 	directory := filepath.Dir(image.Dockerfile)
 	files, err := listFiles(directory)
 	if err != nil {
@@ -133,7 +134,8 @@ func (image *Image) CalculateChecksum() error {
 
 	hash := sha256.New()
 	hash.Write([]byte(checksums))
-	checksum := hex.EncodeToString(hash.Sum(nil))
+	//converting checksum to string and truncating to the specified checksumLength
+	checksum := hex.EncodeToString(hash.Sum(nil))[:checksumLength]
 	log.Printf("Resulting checksum for %s%s: %s", image.ImageConfig.Name, tagSuffix, checksum)
 	image.Checksum = checksum
 	return nil
