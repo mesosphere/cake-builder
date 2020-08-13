@@ -23,7 +23,10 @@ func main() {
 	registryUrl := flag.String("registry", "https://index.docker.io", "Docker registry URL")
 	dockerUser := flag.String("username", "", "Username to authenticate with Docker registry")
 	dockerPassword := flag.String("password", "", "Password to authenticate with Docker registry")
-	checksumLength := flag.Int("checksum-length", cake.DefaultShaLength, fmt.Sprintf("Truncate the resulting checksum tag to the specified length within the interval [1, %d]", cake.DefaultShaLength))
+	checksumLength := flag.Int("checksum-length", cake.DefaultShaLength,
+		fmt.Sprintf("Truncate the resulting checksum tag to the specified length within the interval [1, %d]. "+
+			"The recommended length of the truncated checksum is 8-10 characters.", cake.DefaultShaLength))
+
 	flag.Parse()
 
 	var config cake.BuildConfig

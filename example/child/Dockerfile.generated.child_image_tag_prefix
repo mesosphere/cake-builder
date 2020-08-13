@@ -1,9 +1,0 @@
-FROM akirillov/cake-example:349a1b
-
-LABEL version="alpha"
-
-ENV TEST test
-
-COPY shared ${CONF_HOME}
-
-RUN echo "2.4.0" > ${CONF_HOME}/version.txt

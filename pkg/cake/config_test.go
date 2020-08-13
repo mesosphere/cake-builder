@@ -20,6 +20,7 @@ images:
     name: test
     template: base/Dockerfile.template
     tag_prefix: base
+    tag_suffix: beta
     properties:
       base_key_1: base_value_1
       base_key_2: base_value_2
@@ -33,6 +34,7 @@ images:
     name: test
     template: child/Dockerfile.template
     tag_prefix: child
+    tag_suffix: alpha
     properties:
       child_key_1: child_value_1
       child_key_2: child_value_2
@@ -86,7 +88,8 @@ images:
 	assert.Equal(t, "testorg", base.Repository)
 	assert.Equal(t, "test", base.Name)
 	assert.Equal(t, "base/Dockerfile.template", base.Template)
-	assert.Equal(t, "base", base.TagSuffix)
+	assert.Equal(t, "base", base.TagPrefix)
+	assert.Equal(t, "beta", base.TagSuffix)
 
 	assert.Equal(t, 2, len(base.Properties))
 	assert.Equal(t, "base_value_1", base.Properties["base_key_1"])
@@ -99,7 +102,8 @@ images:
 	assert.Equal(t, "testorg", child.Repository)
 	assert.Equal(t, "test", child.Name)
 	assert.Equal(t, "child/Dockerfile.template", child.Template)
-	assert.Equal(t, "child", child.TagSuffix)
+	assert.Equal(t, "child", child.TagPrefix)
+	assert.Equal(t, "alpha", child.TagSuffix)
 
 	assert.Equal(t, 2, len(child.Properties))
 	assert.Equal(t, "child_value_1", child.Properties["child_key_1"])

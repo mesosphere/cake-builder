@@ -60,8 +60,14 @@ func (image Image) getChecksumTag(config BuildConfig) string {
 }
 
 func getTagStr(image Image, version string) string {
-	if len(image.ImageConfig.TagSuffix) > 0 {
-		return fmt.Sprintf("%s-%s", image.ImageConfig.TagSuffix, version)
+	prefix, suffix := len(image.ImageConfig.TagPrefix) > 0, len(image.ImageConfig.TagSuffix) > 0
+
+	if prefix && suffix {
+		return fmt.Sprintf("%s-%s-%s", image.ImageConfig.TagPrefix, version, image.ImageConfig.TagSuffix)
+	} else if !prefix && suffix {
+		return fmt.Sprintf("%s-%s", version, image.ImageConfig.TagSuffix)
+	} else if prefix && !suffix {
+		return fmt.Sprintf("%s-%s", image.ImageConfig.TagPrefix, version)
 	} else {
 		return version
 	}

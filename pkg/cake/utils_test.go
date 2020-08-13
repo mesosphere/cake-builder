@@ -49,7 +49,9 @@ RUN echo "%s" > /version.txt
 			Checksum: "baz",
 		},
 		ImageConfig: ImageConfig{
-			Template: tmpFile.Name(),
+			Template:  tmpFile.Name(),
+			TagPrefix: "child",
+			TagSuffix: "alpha",
 			Properties: map[string]string{
 				"tmpl_property": expectedEnvVar,
 				"tmpl_version":  expectedVersionVar,
@@ -61,7 +63,9 @@ RUN echo "%s" > /version.txt
 	if err != nil {
 		t.Errorf("Unexpected error while rendering Dockerfile from template: %v", err)
 	}
-	dockerfile := path.Join(tmpDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagSuffix)
+
+	filename := fmt.Sprintf("%s.%s.%s", GeneratedDockerFileNamePrefix, image.ImageConfig.TagPrefix, image.ImageConfig.TagSuffix)
+	dockerfile := path.Join(tmpDir, filename)
 
 	_, err = os.Stat(dockerfile)
 	if os.IsNotExist(err) {
@@ -137,7 +141,7 @@ ENV GLOBAL_PROPERTY_OVERRIDE %s
 	if err != nil {
 		t.Errorf("Unexpected error while rendering Dockerfile from template: %v", err)
 	}
-	dockerfile := path.Join(tmpDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagSuffix)
+	dockerfile := path.Join(tmpDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagPrefix)
 
 	_, err = os.Stat(dockerfile)
 	if os.IsNotExist(err) {
@@ -378,7 +382,7 @@ COMMAND echo "Hello world"
 	image := Image{
 		Dockerfile: secondaryDockerfile.Name(),
 		ImageConfig: ImageConfig{
-			TagSuffix: "secondary",
+			TagPrefix: "secondary",
 		},
 	}
 

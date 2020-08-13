@@ -14,7 +14,8 @@ type ImageConfig struct {
 	Parent        string
 	Repository    string
 	Name          string
-	TagSuffix     string `yaml:"tag_prefix"`
+	TagPrefix     string `yaml:"tag_prefix"`
+	TagSuffix     string `yaml:"tag_suffix"`
 	Template      string
 	ExtraFiles    []string `yaml:"extra_files"`
 	ExcludedFiles []string `yaml:"exclude_files"`

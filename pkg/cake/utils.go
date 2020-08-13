@@ -47,7 +47,11 @@ func (image *Image) RenderDockerfileFromTemplate(config BuildConfig) error {
 		return fmt.Errorf("error while rendering template: %v", err)
 	}
 
+	// including prefix and suffix into the generated file name for better readability
 	dockerfile := fmt.Sprintf("%s/%s", directory, GeneratedDockerFileNamePrefix)
+	if len(image.ImageConfig.TagPrefix) > 0 {
+		dockerfile = fmt.Sprintf("%s.%s", dockerfile, image.ImageConfig.TagPrefix)
+	}
 	if len(image.ImageConfig.TagSuffix) > 0 {
 		dockerfile = fmt.Sprintf("%s.%s", dockerfile, image.ImageConfig.TagSuffix)
 	}
@@ -111,11 +115,9 @@ func (image *Image) CalculateChecksum(checksumLength int) error {
 	}
 
 	sort.Strings(files)
-	tagSuffix := ""
-	if len(image.ImageConfig.TagSuffix) > 0 {
-		tagSuffix = fmt.Sprintf("(%s)", image.ImageConfig.TagSuffix)
-	}
-	log.Printf("Files used for content checksum for %s%s:", image.ImageConfig.Name, tagSuffix)
+	imageDetailsStr := fmt.Sprintf("[%s][%s]", image.ImageConfig.TagPrefix, image.ImageConfig.TagSuffix)
+
+	log.Printf("Files used for content checksum for %s%s:", image.ImageConfig.Name, imageDetailsStr)
 	for _, file := range files {
 		log.Println(file)
 	}
@@ -136,7 +138,7 @@ func (image *Image) CalculateChecksum(checksumLength int) error {
 	hash.Write([]byte(checksums))
 	//converting checksum to string and truncating to the specified checksumLength
 	checksum := hex.EncodeToString(hash.Sum(nil))[:checksumLength]
-	log.Printf("Resulting checksum for %s%s: %s", image.ImageConfig.Name, tagSuffix, checksum)
+	log.Printf("Resulting checksum for %s%s: %s", image.ImageConfig.Name, imageDetailsStr, checksum)
 	image.Checksum = checksum
 	return nil
 }
