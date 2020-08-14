@@ -17,18 +17,26 @@ func main() {
 	}
 	log.Println("Running in " + currentDir)
 
-	dryRun := flag.Bool("dry-run", false, "Resolves templates and calculates checksums without build  or pushing images")
+	dryRun := flag.Bool("dry-run", false, "Resolves templates and calculates checksums without building or pushing images")
 	releaseTag := flag.String("release-tag", "latest", "Additional tag to republish checksum based images with e.g. a release tag")
 	outputFile := flag.String("out", currentDir+"/cake-report.json", "A file to save build report to")
 	registryUrl := flag.String("registry", "https://index.docker.io", "Docker registry URL")
 	dockerUser := flag.String("username", "", "Username to authenticate with Docker registry")
 	dockerPassword := flag.String("password", "", "Password to authenticate with Docker registry")
+	checksumLength := flag.Int("checksum-length", cake.DefaultShaLength,
+		fmt.Sprintf("Truncate the resulting checksum tag to the specified length within the interval [1, %d]. "+
+			"The recommended length of the truncated checksum is 8-10 characters.", cake.DefaultShaLength))
+
 	flag.Parse()
 
 	var config cake.BuildConfig
 	err = config.LoadConfigFromFile(currentDir + "/cake.yaml")
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if *checksumLength <= 0 || *checksumLength > 64 {
+		log.Fatalf("Invalid checksum length value. Expected value should be in the interval [1, %d] but was %d.", cake.DefaultShaLength, *checksumLength)
 	}
 
 	config.BaseDir = currentDir
@@ -58,7 +66,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = image.CalculateChecksum()
+		err = image.CalculateChecksum(*checksumLength)
 		if err != nil {
 			log.Fatal(err)
 		}

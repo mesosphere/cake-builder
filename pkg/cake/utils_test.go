@@ -49,7 +49,9 @@ RUN echo "%s" > /version.txt
 			Checksum: "baz",
 		},
 		ImageConfig: ImageConfig{
-			Template: tmpFile.Name(),
+			Template:  tmpFile.Name(),
+			TagPrefix: "child",
+			TagSuffix: "alpha",
 			Properties: map[string]string{
 				"tmpl_property": expectedEnvVar,
 				"tmpl_version":  expectedVersionVar,
@@ -61,7 +63,9 @@ RUN echo "%s" > /version.txt
 	if err != nil {
 		t.Errorf("Unexpected error while rendering Dockerfile from template: %v", err)
 	}
-	dockerfile := path.Join(tmpDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagSuffix)
+
+	filename := fmt.Sprintf("%s.%s.%s", GeneratedDockerFileNamePrefix, image.ImageConfig.TagPrefix, image.ImageConfig.TagSuffix)
+	dockerfile := path.Join(tmpDir, filename)
 
 	_, err = os.Stat(dockerfile)
 	if os.IsNotExist(err) {
@@ -137,7 +141,7 @@ ENV GLOBAL_PROPERTY_OVERRIDE %s
 	if err != nil {
 		t.Errorf("Unexpected error while rendering Dockerfile from template: %v", err)
 	}
-	dockerfile := path.Join(tmpDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagSuffix)
+	dockerfile := path.Join(tmpDir, GeneratedDockerFileNamePrefix+image.ImageConfig.TagPrefix)
 
 	_, err = os.Stat(dockerfile)
 	if os.IsNotExist(err) {
@@ -265,88 +269,36 @@ COMMAND echo "Hello world"
 }
 
 func TestCalculateChecksum(t *testing.T) {
-	dockerfileContents := `FROM ubuntu
-COMMAND echo "Hello world"
-`
-	sharedFileContents := `#!/usr/bin/env bash
-set -e -u
+	source := "testdata/basic"
+	dockerfile := path.Join(source, "main", "Dockerfile.generated")
+	nestedFile := path.Join(source, "main", "nested", "nested.file")
+	sharedFile := path.Join(source, "shared", "script.sh")
 
-echo "Hello world"
-`
-
-	nestedFileContents := `log4j.rootCategory=WARN, console
-log4j.appender.console=org.apache.log4j.ConsoleAppender
-`
-	/*
-	   Creating the following folder structure with non-empty files:
-	   root/
-	       __base/
-	           - nested/
-	               - nested.file
-	           - Dockerfile.generated
-	       shared/
-	           - shared.file
-	*/
-
-	root, err := ioutil.TempDir("", "")
+	dockerFileContents, err := ioutil.ReadFile(dockerfile)
 	if err != nil {
-		t.Errorf("Failed to create temporary directory: %v", err)
+		t.Errorf("Unable to read file: %v", err)
 	}
 
-	baseDir, err := ioutil.TempDir(root, "__base")
+	nestedFileContents, err := ioutil.ReadFile(nestedFile)
 	if err != nil {
-		t.Errorf("Failed to create temporary directory: %v", err)
+		t.Errorf("Unable to read file: %v", err)
 	}
 
-	rootDockerfile, err := os.Create(path.Join(baseDir, GeneratedDockerFileNamePrefix))
+	sharedFileContents, err := ioutil.ReadFile(sharedFile)
 	if err != nil {
-		t.Errorf("Failed to create file: %v", err)
+		t.Errorf("Unable to read file: %v", err)
 	}
 
-	_, err = rootDockerfile.Write([]byte(dockerfileContents))
-	if err != nil {
-		t.Errorf("Failed to write file: %v", err)
-	}
-
-	sharedDir, err := ioutil.TempDir(root, "shared")
-	if err != nil {
-		t.Errorf("Failed to create temporary directory: %v", err)
-	}
-
-	sharedFile, err := os.Create(path.Join(sharedDir, "shared.file"))
-	if err != nil {
-		t.Errorf("Failed to create file: %v", err)
-	}
-
-	_, err = sharedFile.Write([]byte(sharedFileContents))
-	if err != nil {
-		t.Errorf("Failed to write file: %v", err)
-	}
-
-	nestedDir := path.Join(baseDir, "nested")
-	err = os.Mkdir(nestedDir, os.FileMode(0777))
-	if err != nil {
-		t.Errorf("Failed to create directory: %v", err)
-	}
-	nestedFile, err := os.Create(path.Join(nestedDir, "nested.file"))
-	if err != nil {
-		t.Errorf("Failed to create file: %v", err)
-	}
-	_, err = nestedFile.Write([]byte(nestedFileContents))
-	if err != nil {
-		t.Errorf("Failed to write file: %v", err)
-	}
-
-	expectedChecksum := checksum(checksum(dockerfileContents) + checksum(nestedFileContents) + checksum(sharedFileContents))
+	expectedChecksum := checksum(checksum(string(dockerFileContents)) + checksum(string(nestedFileContents)) + checksum(string(sharedFileContents)))
 
 	image := Image{
-		Dockerfile: rootDockerfile.Name(),
+		Dockerfile: dockerfile,
 		ImageConfig: ImageConfig{
-			ExtraFiles: []string{sharedDir},
+			ExtraFiles: []string{path.Join(source, "shared")},
 		},
 	}
 
-	err = image.CalculateChecksum()
+	err = image.CalculateChecksum(DefaultShaLength)
 	if err != nil {
 		t.Errorf("Unexpected error while calculating checksum: %v", err)
 	}
@@ -373,7 +325,7 @@ func TestChecksumWithExcludedFiles(t *testing.T) {
 		},
 	}
 
-	err = image.CalculateChecksum()
+	err = image.CalculateChecksum(DefaultShaLength)
 	if err != nil {
 		t.Errorf("Unexpected error while calculating checksum: %v", err)
 	}
@@ -430,11 +382,43 @@ COMMAND echo "Hello world"
 	image := Image{
 		Dockerfile: secondaryDockerfile.Name(),
 		ImageConfig: ImageConfig{
-			TagSuffix: "secondary",
+			TagPrefix: "secondary",
 		},
 	}
 
-	err = image.CalculateChecksum()
+	err = image.CalculateChecksum(DefaultShaLength)
+	if err != nil {
+		t.Errorf("Unexpected error while calculating checksum: %v", err)
+	}
+
+	if expectedChecksum != image.Checksum {
+		t.Errorf("Calculated image checksum differs from the expected.\nExpected:\n%s\nCalculated:\n%s", expectedChecksum, image.Checksum)
+	}
+}
+
+func TestTruncateChecksum(t *testing.T) {
+	source := "testdata/basic"
+	dockerfile := path.Join(source, "main", "Dockerfile.generated")
+	nestedFile := path.Join(source, "main", "nested", "nested.file")
+
+	dockerFileContents, err := ioutil.ReadFile(dockerfile)
+	if err != nil {
+		t.Errorf("Unable to read file: %v", err)
+	}
+
+	nestedFileContents, err := ioutil.ReadFile(nestedFile)
+	if err != nil {
+		t.Errorf("Unable to read file: %v", err)
+	}
+
+	testShaLength := 6
+	expectedChecksum := checksum(checksum(string(dockerFileContents)) + checksum(string(nestedFileContents)))[:testShaLength]
+
+	image := Image{
+		Dockerfile: dockerfile,
+	}
+
+	err = image.CalculateChecksum(testShaLength)
 	if err != nil {
 		t.Errorf("Unexpected error while calculating checksum: %v", err)
 	}
