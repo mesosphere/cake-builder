@@ -26,6 +26,7 @@ func main() {
 	checksumLength := flag.Int("checksum-length", cake.DefaultShaLength,
 		fmt.Sprintf("Truncate the resulting checksum tag to the specified length within the interval [1, %d]. "+
 			"The recommended length of the truncated checksum is 8-10 characters.", cake.DefaultShaLength))
+	backend := flag.String("backend", "docker", "Backend to use for building and pushing images. Valid values: podman, docker")
 
 	flag.Parse()
 
@@ -73,8 +74,16 @@ func main() {
 	})
 
 	if !*dryRun {
-		dockerClient := cake.NewExternalDockerClient(config.AuthConfig)
-		defer dockerClient.Client.Close()
+		var dockerClient cake.DockerClient
+		switch *backend {
+		case "docker":
+			dockerClient = cake.NewExternalDockerClient(config.AuthConfig)
+		case "podman":
+			dockerClient = cake.NewExternalPodmanClient(config.AuthConfig)
+		default:
+			log.Fatal(fmt.Sprintf("%s is not a valid backend", *backend))
+		}
+		defer dockerClient.Close()
 
 		cake.WalkBuildGraphParallel(buildGraph, func(image *cake.Image) {
 			exists, err := cake.ImageExists(dockerClient, image, config)

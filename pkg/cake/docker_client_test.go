@@ -15,6 +15,7 @@ import (
 )
 
 type MockDockerClient struct {
+	AuthConfig             AuthConfig
 	MockTagsResponse       []string
 	MockImageBuildResponse types.ImageBuildResponse
 	ImageBuildOptions      types.ImageBuildOptions
@@ -26,26 +27,41 @@ func (client *MockDockerClient) Tags(imageName string) (tags []string, err error
 	return client.MockTagsResponse, nil
 }
 
-func (client *MockDockerClient) ImageBuild(ctx context.Context, buildContext io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error) {
-	client.ImageBuildOptions = options
+func (client *MockDockerClient) ImageBuild(ctx context.Context, buildContext io.Reader, options ContainerBuildOptions) (types.ImageBuildResponse, error) {
 	response := types.ImageBuildResponse{
 		Body: ioutil.NopCloser(strings.NewReader(`{"message": "image built"}`)),
 	}
 	//setting input options here to verify them in test
-	client.ImageBuildOptions = options
-	return response, nil
+	var err error
+	client.ImageBuildOptions, err = containerBuildOptionsToDockerBuildOptions(client.AuthConfig, options)
+
+	return response, err
 }
 
-func (client *MockDockerClient) ImagePush(ctx context.Context, image string, options types.ImagePushOptions) (io.ReadCloser, error) {
-	client.ImagePushOptions = options
+func (client *MockDockerClient) ImagePush(ctx context.Context, image string, options ContainerPushOptions) (io.ReadCloser, error) {
+	pushOptions, error := containerPushOptionsToDockerPushOptions(client.AuthConfig, options)
+	if error != nil {
+		return nil, error
+	}
+	client.ImagePushOptions = pushOptions
 	//this method called multiple times so we need to collect all the pushed tags
 	client.ImagePushTags = append(client.ImagePushTags, image)
 	return ioutil.NopCloser(strings.NewReader(`{"message": "image pushed"}`)), nil
 }
 
+func (client *MockDockerClient) Close() error {
+	return nil
+}
+
+func NewMockDockerClient(authConfig AuthConfig) *MockDockerClient {
+	client := new(MockDockerClient)
+	client.AuthConfig = authConfig
+	return client
+}
+
 func TestImageExists(t *testing.T) {
 	testTag := "test_tag"
-	client := new(MockDockerClient)
+	client := NewMockDockerClient(AuthConfig{})
 	client.MockTagsResponse = []string{testTag}
 
 	image := Image{ImageConfig: ImageConfig{Repository: "repository", Name: "image-name"}}
@@ -111,7 +127,7 @@ func TestImageBuild(t *testing.T) {
 	}
 	sort.Strings(expectedTags)
 
-	dockerClient := new(MockDockerClient)
+	dockerClient := NewMockDockerClient(buildConfig.AuthConfig)
 	err = BuildImage(dockerClient, &image, buildConfig)
 	if err != nil {
 		t.Error(err)
@@ -138,7 +154,7 @@ func TestImageBuild(t *testing.T) {
 		t.Errorf("Expected config is not present in AuthConfigs for registry: %s", buildConfig.AuthConfig.DockerRegistryUrl)
 	}
 
-	base64Auth, err := base64Auth(buildConfig)
+	base64Auth, err := base64Auth(buildConfig.AuthConfig.Username, buildConfig.AuthConfig.Password)
 	if err != nil {
 		t.Error(err)
 	}
@@ -184,7 +200,8 @@ func TestPushImage(t *testing.T) {
 	}
 	sort.Strings(expectedTags)
 
-	dockerClient := new(MockDockerClient)
+	dockerClient := NewMockDockerClient(buildConfig.AuthConfig)
+
 	err = PushImage(dockerClient, &image, buildConfig)
 	if err != nil {
 		t.Error(err)
@@ -192,7 +209,7 @@ func TestPushImage(t *testing.T) {
 
 	pushOptions := dockerClient.ImagePushOptions
 
-	base64Auth, err := base64Auth(buildConfig)
+	base64Auth, err := base64Auth(buildConfig.AuthConfig.Username, buildConfig.AuthConfig.Password)
 	if err != nil {
 		t.Error(err)
 	}
@@ -217,7 +234,7 @@ func TestBase64Auth(t *testing.T) {
 	//Base64 for the following JSON: {"username":"user","password":"password"}
 	base64 := "eyJ1c2VybmFtZSI6InVzZXIiLCJwYXNzd29yZCI6InBhc3N3b3JkIn0="
 
-	base64Auth, err := base64Auth(buildConfig)
+	base64Auth, err := base64Auth(buildConfig.AuthConfig.Username, buildConfig.AuthConfig.Password)
 	if err != nil {
 		t.Error(err)
 	}

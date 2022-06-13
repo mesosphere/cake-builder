@@ -107,7 +107,28 @@ the image hierarchy
 - Generating build report
 
 ## Building and running
+
+### Prerequisites
+
+Unfortunately, the pod-man bindings have an unreasonable amount of system library dependencies.
+```
+sudo apt-get install btrfs-progs git golang-go go-md2man iptables libassuan-dev libbtrfs-dev libc6-dev libdevmapper-dev libglib2.0-dev libgpgme-dev libgpg-error-dev libprotobuf-dev libprotobuf-c-dev libseccomp-dev libselinux1-dev libsystemd-dev pkg-config runc uidmap
+```
+
+Podman 4.0 or later is needed to run the unit tests. For Ubuntu 22.04, This can be installed via the Debian experimental repo:
+
+```
+echo "deb http://deb.debian.org/debian experimental main" | sudo tee -a /etc/apt/sources.list.d/debian-experimental.list
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 648ACFD622F3D138
+sudo apt-get update
+# apt-cache policy podman to find the latest version of podman
+apt install podman=4.1.0+ds2-2
+```
+
+
 To build the binary, run the following command from the project root:
+
+
 ```
 go build -i -o cake ./cmd/cake/main.go
 ```
